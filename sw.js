@@ -1,5 +1,5 @@
 // FINDS isolated PWA cache experiment — TEST 3
-const CACHE='finds-isolated-pwa-test-v3';
+const CACHE='finds-isolated-pwa-test-v4';
 const SHELL=['./index.html','./manifest.webmanifest','./version.json'];
 self.addEventListener('install',event=>{
  event.waitUntil((async()=>{
