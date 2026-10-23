@@ -1,8 +1,8 @@
 {
-  "id": "./?app=isolated-finds-pwa-test",
+  "id": "/-finds-pwa-test/standalone-test-app",
   "name": "FINDS — PWA Update Test",
   "short_name": "FINDS TEST",
-  "start_url": "./",
+  "start_url": "./index.html?app=standalone-test",
   "scope": "./",
   "display": "standalone",
   "background_color": "#101a2a",
