@@ -1,1 +1,27 @@
-<!doctype html><html lang="ru"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#14263d"><link rel="manifest" href="./manifest.webmanifest"><title>FINDS PWA Cache Test</title><style>body{font:18px system-ui;background:#101a2a;color:#fff;margin:0;padding:24px}main{max-width:520px;margin:auto}h1{font-size:28px}strong{color:#7de0bb}button{padding:15px;border:0;border-radius:12px;font-size:17px;margin:8px 0;background:#7de0bb}pre{white-space:pre-wrap;font-size:14px}</style></head><body><main><h1>FINDS · PWA TEST</h1><p>Версия страницы: <strong id="version">TEST 1</strong></p><p>Проверка обновлений установленной PWA без удаления приложения и очистки кэша.</p><button id="check">Проверить обновление</button><pre id="status">Ожидание…</pre></main><script>const status=document.getElementById('status');if('serviceWorker'in navigator){navigator.serviceWorker.register('./sw.js',{updateViaCache:'none'}).then(reg=>{status.textContent='Service worker зарегистрирован';reg.addEventListener('updatefound',()=>{const w=reg.installing;if(w)w.addEventListener('statechange',()=>{if(w.state==='activated')location.reload()})});navigator.serviceWorker.addEventListener('controllerchange',()=>location.reload());document.getElementById('check').onclick=async()=>{status.textContent='Проверяю…';await reg.update();try{const r=await fetch('./version.json?ts='+Date.now(),{cache:'no-store'});const v=await r.json();status.textContent='Серверная версия: '+v.version+'; версия экрана: '+document.getElementById('version').textContent}catch(e){status.textContent='Офлайн или ошибка сети: '+e.message}}}).catch(e=>status.textContent='Ошибка SW: '+e.message)}else status.textContent='Service worker не поддерживается';</script></body></html>
+<!doctype html><html lang="ru"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#14263d"><link rel="manifest" href="./manifest.webmanifest"><title>FINDS PWA Cache Test</title><style>body{font:18px system-ui;background:#101a2a;color:#fff;margin:0;padding:24px}main{max-width:520px;margin:auto}h1{font-size:28px}strong{color:#7de0bb}button{padding:15px;border:0;border-radius:12px;font-size:17px;margin:8px 0;background:#7de0bb}pre{white-space:pre-wrap;font-size:14px}</style></head><body><main><h1>FINDS · PWA TEST</h1><p>Версия страницы: <strong id="version">TEST 2</strong></p><p>Автоматическая проверка обновлений при запуске. Без удаления приложения и очистки кэша.</p><button id="check">Проверить обновление</button><pre id="status">Ожидание…</pre></main><script>
+const status=document.getElementById('status');
+const screenVersion=document.getElementById('version').textContent.trim();
+let reloading=false;
+function reloadOnce(){if(!reloading){reloading=true;location.reload()}}
+async function checkVersion(reg){
+ try{
+  const response=await fetch('./version.json?check='+Date.now(),{cache:'no-store'});
+  if(!response.ok)throw Error('HTTP '+response.status);
+  const remote=await response.json();
+  if(remote.version!==screenVersion){
+   status.textContent='Найдена версия '+remote.version+'. Обновляю…';
+   await reg.update();
+   const url=new URL(location.href);url.searchParams.set('refresh',Date.now().toString());
+   location.replace(url.href);
+  }else status.textContent='Актуальная версия: '+screenVersion;
+ }catch(e){status.textContent='Офлайн: сохранённая версия '+screenVersion}
+}
+if('serviceWorker' in navigator){
+ navigator.serviceWorker.addEventListener('controllerchange',reloadOnce);
+ navigator.serviceWorker.register('./sw.js',{updateViaCache:'none'}).then(reg=>{
+  document.getElementById('check').onclick=()=>checkVersion(reg);
+  checkVersion(reg);
+  document.addEventListener('visibilitychange',()=>{if(!document.hidden)checkVersion(reg)});
+ }).catch(e=>status.textContent='Ошибка service worker: '+e.message);
+}else status.textContent='Service worker не поддерживается';
+</script></body></html>
